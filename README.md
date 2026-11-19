@@ -135,3 +135,25 @@ Jawaban dan saran AI tidak langsung dianggap benar. Penjelasan dibandingkan deng
 AI dapat memberikan kode yang terlihat benar secara sintaksis tetapi belum tentu sesuai dengan seluruh kebutuhan aplikasi. Oleh karena itu, hasil bantuan AI tetap perlu diperiksa pada kode proyek dan melalui pengujian aplikasi secara langsung.
 
 Pada proses pengembangan, perintah `flutter analyze` telah dijalankan dan menghasilkan `No issues found`.
+
+## Tutorial 9
+
+- `lib/screens/menu.dart`: halaman utama dan identitas pemilik.
+- `lib/screens/project_form.dart`: formulir proyek dengan lima isian.
+- `lib/widgets/left_drawer.dart`: Home dan Add Project menggunakan `pushReplacement`.
+- `lib/widgets/project_card.dart`: kartu menu; Tambah Proyek menggunakan `push`.
+- Nama dan deskripsi wajib diisi serta menolak spasi saja. Kategori memiliki lima pilihan;
+  teknologi dan tautan boleh kosong sesuai tutorial.
+- Save menampilkan seluruh data pada AlertDialog. OK menutup dialog dan mereset
+  isian serta kategori ke Web Development. Data belum disimpan ke database.
+- Impor Material menggunakan `material_ui` sesuai PDF, termasuk pada pengujian.
+
+## AI Disclosure Tutorial 9
+
+Dalam pengerjaan Tutorial 9, saya menggunakan **ChatGPT (OpenAI)** sebagai alat bantu untuk memahami materi dan proses pengembangan aplikasi Flutter.
+
+AI membantu memberikan penjelasan mengenai konsep navigasi menggunakan `Navigator`, penggunaan `Drawer`, pembuatan form, validasi input, serta pengelolaan widget dan struktur proyek.
+
+Strategi prompting yang saya gunakan adalah memberikan konteks proyek dan instruksi tutorial, kemudian meminta penjelasan serta contoh implementasi untuk bagian yang belum saya pahami.
+
+Hasil bantuan AI tetap saya sesuaikan dengan instruksi tutorial dan saya periksa kembali untuk memastikan implementasinya berjalan dengan baik. AI digunakan sebagai pendukung pembelajaran, sedangkan tanggung jawab akhir pengerjaan tetap berada pada saya.
