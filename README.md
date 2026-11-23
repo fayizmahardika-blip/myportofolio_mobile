@@ -157,3 +157,61 @@ AI membantu memberikan penjelasan mengenai konsep navigasi menggunakan `Navigato
 Strategi prompting yang saya gunakan adalah memberikan konteks proyek dan instruksi tutorial, kemudian meminta penjelasan serta contoh implementasi untuk bagian yang belum saya pahami.
 
 Hasil bantuan AI tetap saya sesuaikan dengan instruksi tutorial dan saya periksa kembali untuk memastikan implementasinya berjalan dengan baik. AI digunakan sebagai pendukung pembelajaran, sedangkan tanggung jawab akhir pengerjaan tetap berada pada saya.
+
+### Tugas 8
+
+**1. Jelaskan perbedaan antara Navigator.push(), Navigator.pushReplacement(), dan Navigator.pop(). Metode apa yang digunakan untuk membuka formulir dari kartu aksi? Jelaskan juga bagaimana opsi Home di drawer membawa pengguna kembali ke halaman utama.**
+
+`Navigator.push()` digunakan untuk menambahkan halaman baru ke dalam navigation stack. Dengan metode ini, pengguna dapat kembali ke halaman sebelumnya menggunakan tombol Back.
+
+`Navigator.pushReplacement()` digunakan untuk mengganti halaman yang sedang aktif dengan halaman baru, sehingga halaman yang digantikan tidak lagi berada pada posisi tersebut dalam navigation stack.
+
+Sementara itu, `Navigator.pop()` digunakan untuk menutup route yang berada di bagian teratas navigation stack, sehingga pengguna kembali ke route sebelumnya.
+
+Dalam proyek MyPortfolio Mobile, `Navigator.push()` digunakan pada kartu aksi Tambah Edukasi untuk membuka `EducationFormPage`. Dengan demikian, pengguna dapat kembali ke halaman utama menggunakan tombol Back.
+
+Opsi Home pada Drawer menggunakan navigasi untuk membawa pengguna kembali ke `MyHomePage`, sehingga pengguna dapat berpindah dari halaman formulir ke halaman utama.
+
+**2. Bagaimana susunan Scaffold, AppBar, dan Drawer membantu menjaga struktur halaman tetap konsisten? Berikan satu contoh penggunaan warna tema portofolio di lebih dari satu halaman.**
+
+`Scaffold` menyediakan kerangka dasar halaman Flutter, seperti area `AppBar`, `Drawer`, dan `body`.
+
+`AppBar` digunakan untuk menampilkan judul halaman, sedangkan `Drawer` menyediakan menu navigasi yang dapat digunakan untuk berpindah antarhalaman.
+
+Dengan menggunakan struktur tersebut secara konsisten, halaman Home, Add Project, dan Add Education memiliki pola antarmuka serta navigasi yang serupa.
+
+Sebagai contoh, warna utama aplikasi dapat diambil menggunakan `Theme.of(context).colorScheme.primary` dan digunakan sebagai warna latar `AppBar` pada halaman Home maupun halaman Education Form. Dengan demikian, kedua halaman tetap mengikuti tema portofolio yang sama.
+
+**3. Mengapa tata letak tersebut dipilih untuk formulir? Jelaskan peran widget pengatur jarak dan widget penggulir ketika ruang layar terbatas.**
+
+Form Edukasi disusun menggunakan `Column` agar seluruh input ditampilkan secara vertikal dan mudah diikuti oleh pengguna.
+
+Widget `Padding` digunakan untuk memberikan jarak antara konten dengan tepi halaman, sedangkan `SizedBox` memberikan jarak antar-input agar tampilan lebih rapi dan mudah dibaca.
+
+Selain itu, `SingleChildScrollView` digunakan agar seluruh elemen formulir dapat digulir ketika ukuran layar terbatas atau papan ketik sedang ditampilkan.
+
+Tata letak ini dipilih karena aplikasi Flutter dapat dijalankan pada perangkat dengan berbagai ukuran layar. Dengan adanya fitur scrolling, pengguna tetap dapat mengakses input dan tombol Simpan pada layar yang sempit.
+
+**4. Apa peran GlobalKey<FormState>, validator, dan validate() saat tombol Simpan ditekan? Berikan satu contoh nilai yang ditolak oleh validasi dan jelaskan mengapa memilih jenis input atau papan ketik saja belum cukup.**
+
+`GlobalKey<FormState>` digunakan untuk mengakses dan mengelola state dari widget `Form`, termasuk menjalankan validasi terhadap input yang berada di dalamnya.
+
+`validator` merupakan fungsi yang memeriksa apakah nilai suatu input telah memenuhi persyaratan. Jika input tidak valid, validator mengembalikan pesan kesalahan. Jika input valid, validator mengembalikan `null`.
+
+Ketika tombol Simpan ditekan, aplikasi menjalankan `_formKey.currentState!.validate()` untuk memeriksa seluruh field yang memiliki validator.
+
+Sebagai contoh, jika pengguna mengisi Nama Institusi hanya dengan spasi (`"   "`), input tersebut akan ditolak karena setelah menggunakan `trim()`, nilainya menjadi string kosong.
+
+Pada Form Edukasi, validasi juga digunakan untuk memastikan tanggal selesai tidak lebih awal daripada tanggal mulai.
+
+Penggunaan jenis input atau papan ketik yang sesuai memang membantu pengguna memasukkan data, tetapi tidak menjamin data tersebut benar. Oleh karena itu, validasi tetap diperlukan untuk memeriksa isi, kelengkapan, dan kesesuaian data sebelum menampilkan ringkasan melalui `AlertDialog`.
+
+### Penggunaan AI pada Tugas 8
+
+Dalam pengerjaan Tugas 8, saya menggunakan **ChatGPT (OpenAI)** untuk membantu memahami materi Flutter serta memberikan panduan implementasi Form Edukasi.
+
+Bantuan AI mencakup penyusunan contoh kode `StatefulWidget`, pembuatan input dan validasi formulir, penggunaan `showDatePicker()`, integrasi navigasi dengan `Navigator.push()`, serta pengembangan Drawer dan `AlertDialog`.
+
+Strategi prompting dilakukan dengan memberikan konteks proyek dari Tutorial 9 beserta persyaratan Tugas 8, kemudian meminta AI memberikan penjelasan konsep dan contoh implementasi secara bertahap.
+
+Hasil bantuan AI tetap perlu dibandingkan dengan instruksi tugas serta diperiksa melalui analisis kode dan pengujian aplikasi. AI dapat menghasilkan kode yang secara sintaksis terlihat benar, tetapi masih memiliki masalah pada alur navigasi atau interaksi pengguna. Karena itu, pengujian langsung tetap diperlukan untuk memastikan fitur berjalan sesuai kebutuhan.
