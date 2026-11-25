@@ -1,4 +1,3 @@
-
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
 
@@ -150,10 +149,7 @@ class _EducationFormPageState extends State<EducationFormPage> {
                   border: OutlineInputBorder(),
                 ),
                 items: _degrees.map((degree) {
-                  return DropdownMenuItem(
-                    value: degree,
-                    child: Text(degree),
-                  );
+                  return DropdownMenuItem(value: degree, child: Text(degree));
                 }).toList(),
                 onChanged: (value) {
                   if (value != null) {
