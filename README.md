@@ -215,3 +215,51 @@ Bantuan AI mencakup penyusunan contoh kode `StatefulWidget`, pembuatan input dan
 Strategi prompting dilakukan dengan memberikan konteks proyek dari Tutorial 9 beserta persyaratan Tugas 8, kemudian meminta AI memberikan penjelasan konsep dan contoh implementasi secara bertahap.
 
 Hasil bantuan AI tetap perlu dibandingkan dengan instruksi tugas serta diperiksa melalui analisis kode dan pengujian aplikasi. AI dapat menghasilkan kode yang secara sintaksis terlihat benar, tetapi masih memiliki masalah pada alur navigasi atau interaksi pengguna. Karena itu, pengujian langsung tetap diperlukan untuk memastikan fitur berjalan sesuai kebutuhan.
+
+
+## Tutorial 10: Flutter Backend Integration, Authentication, and CI/CD
+
+### Implementasi
+
+Pada Tutorial 10, aplikasi MyPortfolio Mobile diintegrasikan dengan backend Django REST Framework sehingga aplikasi dapat mengambil dan mengirimkan data secara dinamis melalui REST API.
+
+Beberapa fitur yang diimplementasikan pada tutorial ini adalah:
+
+- Konfigurasi Token Authentication dan CORS pada backend Django.
+- Pembuatan endpoint login dan logout berbasis token.
+- Implementasi model Project menggunakan `json_serializable`.
+- Implementasi `ApiClient` untuk menangani HTTP request dan response.
+- Penggunaan `FutureBuilder` dan `RefreshIndicator` untuk menampilkan serta memperbarui daftar proyek.
+- Pembuatan halaman detail proyek.
+- Pengelolaan state autentikasi menggunakan Provider dan ChangeNotifier.
+- Implementasi LoginScreen dan route guard untuk melindungi halaman tambah proyek.
+- Integrasi formulir proyek dengan endpoint POST Django REST Framework.
+- Konfigurasi GitHub Actions untuk Continuous Integration dan Continuous Delivery berupa build APK.
+
+### Cara Menjalankan Aplikasi
+
+Jalankan server Django terlebih dahulu:
+
+```bash
+python manage.py runserver
+```
+
+Kemudian jalankan aplikasi Flutter menggunakan Chrome:
+
+```bash
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000
+```
+
+### Hasil Pengujian Lokal
+
+| Pengujian | Hasil |
+|---|---|
+| `dart format .` | 16 files formatted, 0 changed |
+| `flutter analyze` | No issues found |
+| `flutter test` | All 4 tests passed |
+
+### Penggunaan AI
+
+Dalam pengerjaan Tutorial 10, saya menggunakan ChatGPT untuk membantu memahami konsep integrasi backend, autentikasi berbasis token, JSON serialization, HTTP networking, state management, serta CI/CD. ChatGPT juga membantu memberikan contoh implementasi kode dan solusi terhadap beberapa error selama proses pengerjaan. Saya melakukan penerapan dan pengujian kode pada lingkungan pengembangan lokal.
