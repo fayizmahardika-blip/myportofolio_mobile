@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 import 'package:myportofolio_mobile/screens/education_form.dart';
+import 'package:myportofolio_mobile/screens/education_list_screen.dart';
 import 'package:myportofolio_mobile/screens/project_list_screen.dart';
 import 'package:myportofolio_mobile/services/auth_state.dart';
 import 'package:myportofolio_mobile/widgets/auth_guard.dart';
@@ -32,8 +33,16 @@ class ItemCard extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const ProjectFormPage()),
               );
             case 'Tambah Edukasi':
+              if (await openEducationForm(context) && context.mounted) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const EducationListScreen(),
+                  ),
+                );
+              }
+            case 'Lihat Edukasi':
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const EducationFormPage()),
+                MaterialPageRoute(builder: (_) => const EducationListScreen()),
               );
             case 'Logout':
               if (!context.read<AuthState>().isLoggedIn) {

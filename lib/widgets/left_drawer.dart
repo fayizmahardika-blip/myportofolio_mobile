@@ -2,13 +2,16 @@ import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 import 'package:myportofolio_mobile/screens/education_form.dart';
+import 'package:myportofolio_mobile/screens/education_list_screen.dart';
 import 'package:myportofolio_mobile/screens/project_list_screen.dart';
 import 'package:myportofolio_mobile/services/auth_state.dart';
 import 'package:myportofolio_mobile/widgets/auth_guard.dart';
 import 'package:provider/provider.dart';
 
 class LeftDrawer extends StatelessWidget {
-  const LeftDrawer({super.key});
+  const LeftDrawer({super.key, this.onEducationAdded});
+
+  final Future<void> Function()? onEducationAdded;
 
   @override
   Widget build(BuildContext context) {
@@ -78,15 +81,36 @@ class LeftDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.school_outlined),
-            title: const Text('Add Education'),
+            title: const Text('View Education'),
             onTap: () {
-              Navigator.pop(context);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const EducationFormPage(),
-                ),
+              final navigator = Navigator.of(context);
+              navigator.pop();
+              if (onEducationAdded != null) return;
+              navigator.push(
+                MaterialPageRoute(builder: (_) => const EducationListScreen()),
               );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.school_outlined),
+            title: const Text('Add Education'),
+            onTap: () async {
+              final pageContext = Scaffold.of(context).context;
+              Navigator.of(context).pop();
+              if (!await openEducationForm(pageContext) ||
+                  !pageContext.mounted) {
+                return;
+              }
+              final refresh = onEducationAdded;
+              if (refresh != null) {
+                await refresh();
+              } else {
+                Navigator.of(pageContext).push(
+                  MaterialPageRoute(
+                    builder: (_) => const EducationListScreen(),
+                  ),
+                );
+              }
             },
           ),
           ListTile(

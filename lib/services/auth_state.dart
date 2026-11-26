@@ -12,6 +12,12 @@ class AuthState extends ChangeNotifier {
 
   bool get isLoggedIn => _token != null;
 
+  void clearExpiredToken(String expiredToken) {
+    if (_token != expiredToken) return;
+    _token = null;
+    notifyListeners();
+  }
+
   Future<void> login(String username, String password) async {
     _token = await _apiClient.obtainToken(username, password);
 

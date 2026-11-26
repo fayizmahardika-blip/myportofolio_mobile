@@ -124,13 +124,123 @@ void main() {
     expect(find.text('MyPortfolio'), findsOneWidget);
   });
 
-  testWidgets('Education remains available without a project token', (
-    tester,
-  ) async {
+  testWidgets('Education creation from Home asks for login', (tester) async {
     await tester.pumpWidget(
       _app((_) async => throw StateError('Unexpected call')),
     );
     await _tap(tester, find.text('Tambah Edukasi'));
-    expect(find.byType(EducationFormPage), findsOneWidget);
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(find.byType(EducationFormPage), findsNothing);
+  });
+
+  const education = {
+    'id': 7,
+    'institution': 'Universitas Contoh',
+    'level': 'undergraduate',
+    'field_of_study': 'Ilmu Komputer',
+    'start_year': 2025,
+    'end_year': null,
+  };
+
+  testWidgets('Public education loads from Drawer, retries and opens detail', (
+    tester,
+  ) async {
+    var requests = 0;
+    await tester.pumpWidget(
+      _app((request) async {
+        expect(request.method, 'GET');
+        expect(request.headers['authorization'], isNull);
+        switch (request.url.path) {
+          case '/api/v1/education/':
+            if (++requests == 1) return http.Response('', 503);
+            return http.Response(jsonEncode([education]), 200);
+          case '/api/v1/education/7/':
+            return http.Response.bytes(
+              utf8.encode(
+                jsonEncode({...education, 'description': 'Kelas 日本語'}),
+              ),
+              200,
+            );
+        }
+        throw StateError('Unexpected request');
+      }),
+    );
+    await _openDrawer(tester);
+    await _tap(tester, find.text('View Education'));
+    await _tap(tester, find.text('Retry'));
+    await _tap(tester, find.text('Universitas Contoh'));
+    expect(find.text('Detail Edukasi'), findsOneWidget);
+    expect(find.text('Masih berlangsung'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Kelas 日本語'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Kelas 日本語'), findsOneWidget);
+  });
+
+  testWidgets('Education handles expired token and refreshes after save', (
+    tester,
+  ) async {
+    var loginCount = 0;
+    var saveCount = 0;
+    var hasEntry = false;
+    await tester.pumpWidget(
+      _app((request) async {
+        switch (request.url.path) {
+          case '/api/v1/auth/token/':
+            return http.Response(
+              jsonEncode({'token': 'token-${++loginCount}'}),
+              200,
+            );
+          case '/api/v1/education/':
+            if (request.method == 'GET') {
+              expect(request.headers['authorization'], isNull);
+              return http.Response(
+                jsonEncode(hasEntry ? [education] : []),
+                200,
+              );
+            }
+            saveCount++;
+            expect(request.method, 'POST');
+            expect(request.headers['authorization'], 'Token token-$saveCount');
+            final payload = jsonDecode(request.body) as Map<String, dynamic>;
+            expect(payload.containsKey('id'), isFalse);
+            expect(payload['start_year'], 2025);
+            expect(payload['end_year'], isNull);
+            expect(payload['field_of_study'], 'Ilmu Komputer');
+            if (saveCount == 1) return http.Response('', 401);
+            hasEntry = true;
+            return http.Response(jsonEncode(education), 201);
+        }
+        throw StateError('Unexpected request');
+      }),
+    );
+    await _tap(tester, find.text('Lihat Edukasi'));
+    expect(find.text('Belum ada data edukasi.'), findsOneWidget);
+    await _tap(tester, find.text('Tambah Edukasi'));
+    await _login(tester);
+
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), 'Universitas Contoh');
+    await tester.enterText(fields.at(1), 'Ilmu Komputer');
+    await tester.enterText(fields.at(2), '2025');
+    await tester.enterText(fields.at(3), '2024');
+    await _tap(tester, find.widgetWithText(FilledButton, 'Simpan'));
+    expect(
+      find.text('Tahun selesai tidak boleh sebelum tahun mulai.'),
+      findsOneWidget,
+    );
+    expect(saveCount, 0);
+
+    await tester.enterText(fields.at(3), '');
+    await _tap(tester, find.widgetWithText(FilledButton, 'Simpan'));
+    await _login(tester);
+    expect(saveCount, 1);
+    await _tap(tester, find.widgetWithText(FilledButton, 'Simpan'));
+    expect(find.text('Edukasi tersimpan'), findsOneWidget);
+    await _tap(tester, find.text('OK'));
+    expect(find.text('Universitas Contoh'), findsOneWidget);
+    expect(saveCount, 2);
   });
 }
