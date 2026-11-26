@@ -263,3 +263,166 @@ flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000
 ### Penggunaan AI
 
 Dalam pengerjaan Tutorial 10, saya menggunakan ChatGPT untuk membantu memahami konsep integrasi backend, autentikasi berbasis token, JSON serialization, HTTP networking, state management, serta CI/CD. ChatGPT juga membantu memberikan contoh implementasi kode dan solusi terhadap beberapa error selama proses pengerjaan. Saya melakukan penerapan dan pengujian kode pada lingkungan pengembangan lokal.
+
+
+
+### Tugas 9: Flutter Backend Integration, Authentication, and CI/CD
+
+Pada Tugas 9, saya mengembangkan fitur Education yang sebelumnya berupa formulir lokal pada Tugas 8 menjadi fitur yang terintegrasi dengan backend Django REST Framework. Integrasi ini menerapkan JSON serialization, HTTP networking, token authentication, state management, dan CI/CD yang telah dipelajari pada Tutorial 10.
+
+#### Fitur yang Diimplementasikan
+
+- Model Education menggunakan `@JsonSerializable`.
+- Pengambilan daftar dan detail Education melalui REST API tanpa autentikasi.
+- Penggunaan `FutureBuilder` dan `RefreshIndicator` dengan penanganan kondisi loading, error, retry, dan empty state.
+- Integrasi formulir Education dengan endpoint POST menggunakan token autentikasi.
+- Route guarding menggunakan `ensureLoggedIn()`.
+- Penanganan HTTP 401 dengan menghapus token yang tidak valid dan meminta pengguna melakukan login kembali tanpa menghilangkan input formulir.
+- Penyegaran daftar Education setelah penambahan data.
+- Automated testing menggunakan `MockClient`.
+- Pipeline CI/CD menggunakan GitHub Actions untuk pemeriksaan kode dan pembuatan APK release.
+
+#### Pertanyaan Reflektif
+
+**1. Mengapa kita menggunakan `@JsonSerializable(fieldRename: FieldRename.snake)` dan `@JsonKey(includeToJson: false)` alih-alih mengirim objek `Map<String, dynamic>` mentah langsung dari widget? Jelaskan satu bug yang dicegah atau dapat dicegah oleh pendekatan ini pada model bagianmu.**
+
+Penggunaan `@JsonSerializable` memungkinkan proses serialization dan deserialization dilakukan secara otomatis melalui code generation. Dengan menggunakan model yang memiliki tipe data yang jelas, kode menjadi lebih terstruktur, mudah dipelihara, dan mengurangi risiko kesalahan dalam proses pertukaran data antara Flutter dan Django.
+
+`FieldRename.snake` digunakan untuk menyesuaikan konvensi penamaan atribut Dart yang menggunakan camelCase dengan Django REST Framework yang menggunakan snake_case. Sebagai contoh, atribut `fieldOfStudy` dan `startYear` pada model Education secara otomatis dikonversi menjadi `field_of_study` dan `start_year` ketika dikirim ke backend.
+
+Sementara itu, `@JsonKey(includeToJson: false)` digunakan pada atribut `id` agar ID tetap dapat dibaca dari respons backend, tetapi tidak disertakan ketika melakukan POST karena ID merupakan tanggung jawab server.
+
+Salah satu bug yang dapat dicegah adalah kesalahan pengiriman atribut `startYear` ketika backend mengharapkan `start_year`. Kesalahan tersebut dapat menyebabkan Django mengembalikan HTTP 400 karena field yang diwajibkan tidak ditemukan. Dengan menggunakan JSON serialization otomatis, risiko kesalahan penamaan atribut dapat dikurangi.
+
+---
+
+**2. Mengapa Future yang diteruskan ke FutureBuilder harus diinisialisasi di dalam `initState()` alih-alih langsung di dalam `build()`, dan mengapa ApiClient sebaiknya melempar ApiException daripada mengembalikan null pada respons HTTP non-2xx?**
+
+Method `initState()` dijalankan satu kali ketika objek State diinisialisasi, sedangkan method `build()` dapat dijalankan berkali-kali ketika terjadi perubahan state atau rebuild pada widget.
+
+Jika pemanggilan API dilakukan langsung di dalam `build()`, setiap rebuild berpotensi menghasilkan Future baru dan mengirimkan HTTP request secara berulang. Hal tersebut dapat menyebabkan pemborosan sumber daya jaringan, penurunan performa, serta tampilan loading yang tidak diperlukan.
+
+Pada Education List Screen, Future diinisialisasi di dalam `initState()` dan disimpan sebagai atribut State. Future baru dibuat ketika data perlu dimuat ulang, misalnya saat pengguna melakukan refresh atau menekan tombol Retry.
+
+ApiClient sebaiknya melempar `ApiException` karena exception dapat membawa informasi mengenai status HTTP yang menyebabkan kegagalan. Jika hanya mengembalikan null, aplikasi akan kesulitan membedakan antara data yang memang kosong dan request yang gagal.
+
+Sebagai contoh, ketika backend mengembalikan HTTP 401, aplikasi dapat mengetahui bahwa autentikasi tidak valid, menghapus token pada AuthState, dan meminta pengguna melakukan login kembali. Dengan demikian, penanganan error menjadi lebih spesifik dan memberikan pengalaman pengguna yang lebih baik.
+
+---
+
+**3. Bandingkan SessionAuthentication milik Django dengan TokenAuthentication milik DRF. Mengapa aplikasi mobile menggunakan TokenAuthentication sementara SessionAuthentication tetap diaktifkan pada backend Django?**
+
+SessionAuthentication merupakan mekanisme autentikasi yang menggunakan session Django dan cookie untuk mengenali pengguna. Setelah pengguna berhasil melakukan login, browser menyimpan session cookie yang digunakan pada request berikutnya. Mekanisme ini juga menggunakan perlindungan CSRF untuk operasi seperti POST yang mengandalkan autentikasi session.
+
+TokenAuthentication menggunakan token yang diperoleh setelah pengguna berhasil melakukan autentikasi melalui endpoint login. Token tersebut kemudian disertakan dalam header HTTP dengan format `Authorization: Token <key>` ketika pengguna melakukan request yang membutuhkan autentikasi.
+
+Aplikasi Flutter menggunakan TokenAuthentication karena mekanisme tersebut memungkinkan aplikasi berkomunikasi dengan REST API tanpa bergantung pada session cookie browser. Token disimpan dalam AuthState dan digunakan oleh ApiClient ketika mengirimkan request yang dilindungi.
+
+SessionAuthentication tetap diaktifkan karena proyek Django sebelumnya juga memiliki antarmuka web yang menggunakan autentikasi berbasis session. Dengan mempertahankan kedua mekanisme tersebut, backend dapat melayani aplikasi web Django dan aplikasi mobile Flutter secara bersamaan.
+
+Meskipun Flutter menggunakan route guard untuk melindungi halaman tertentu, validasi token dan permission tetap harus dilakukan pada backend karena pengamanan antarmuka tidak dapat menggantikan pengamanan server.
+
+---
+
+**4. Jelaskan peran job build dan build_apk dalam pipeline `.github/workflows/main.yaml` milikmu. Mengapa berkas `*.g.dart` dimasukkan ke `.gitignore` meskipun CI membutuhkannya untuk menganalisis dan membangun aplikasi?**
+
+Job `build` merupakan bagian dari Continuous Integration yang menggunakan reusable workflow dari `VeryGoodOpenSource/very_good_workflows`. Job ini bertanggung jawab memastikan kualitas dan konsistensi kode melalui beberapa pemeriksaan, yaitu:
+
+- Menjalankan code generation menggunakan `build_runner`.
+- Memeriksa format kode Dart.
+- Menjalankan static analysis menggunakan `flutter analyze`.
+- Menjalankan automated testing.
+- Memeriksa code coverage.
+
+Job `build_apk` merupakan bagian dari Continuous Delivery yang bertanggung jawab menghasilkan file instalasi aplikasi Android. Job tersebut hanya dijalankan apabila job `build` berhasil melalui konfigurasi `needs: build`.
+
+Pada tahap ini, GitHub Actions menyiapkan Flutter SDK, menginstal dependencies, menjalankan code generation, membangun APK release, dan mengunggah hasilnya sebagai artifact bernama `app-release-apk`.
+
+Berkas `*.g.dart` dimasukkan ke dalam `.gitignore` karena merupakan file yang dihasilkan secara otomatis oleh `json_serializable` melalui `build_runner`, bukan kode utama yang ditulis secara manual.
+
+Dengan tidak memasukkan generated files ke dalam repository, risiko konflik Git, duplikasi kode, dan ketidaksesuaian antara model dengan hasil code generation dapat dikurangi.
+
+Meskipun file tersebut tidak disimpan dalam repository, pipeline CI/CD tetap dapat menghasilkannya kembali sebelum melakukan analisis, pengujian, dan build APK.
+
+#### Backend Integration
+
+Backend menggunakan Django REST Framework dengan endpoint berikut:
+
+| Method | Endpoint | Authentication |
+| --- | --- | --- |
+| GET | `/api/v1/education/` | Public |
+| GET | `/api/v1/education/<id>/` | Public |
+| POST | `/api/v1/education/` | Token Authentication |
+| POST | `/api/v1/auth/token/` | Public |
+| POST | `/api/v1/auth/logout/` | Token Authentication |
+
+Alamat deployment backend Django:
+
+https://fayiz-mahardika-myportofolio.pws.cs.ui.ac.id/
+
+#### Setup dan Cara Menjalankan Aplikasi
+
+Jalankan backend Django terlebih dahulu:
+
+```bash
+python -m pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+Kemudian, pada direktori Flutter, jalankan:
+
+```bash
+flutter pub get
+dart run build_runner build
+```
+
+Untuk menjalankan aplikasi melalui Chrome dengan backend lokal:
+
+```bash
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000
+```
+
+Untuk menjalankan aplikasi melalui Android Emulator dengan backend lokal:
+
+```bash
+flutter run
+```
+
+Aplikasi menggunakan alamat default `http://10.0.2.2:8000` untuk mengakses backend lokal melalui Android Emulator.
+
+#### Testing
+
+Pengujian dilakukan menggunakan `flutter test` dengan bantuan `MockClient` untuk menyimulasikan HTTP request dan response tanpa bergantung pada server Django yang sedang berjalan.
+
+Pengujian mencakup navigasi halaman, akses data publik, autentikasi, validasi formulir, penanganan error, HTTP 401, login ulang, dan penyegaran data setelah operasi POST berhasil.
+
+Hasil pemeriksaan lokal:
+
+| Pemeriksaan | Hasil |
+| --- | --- |
+| Build Runner | Passed |
+| Dart Format | 20 files formatted, 0 changed |
+| Flutter Analyze | No issues found |
+| Flutter Test | All 6 tests passed |
+
+Penggunaan MockClient memungkinkan perilaku aplikasi diuji secara konsisten, termasuk ketika backend mengembalikan respons error. Namun, pengujian tersebut tidak menggantikan pengujian end-to-end menggunakan backend Django yang sebenarnya.
+
+#### AI Disclosure
+
+Dalam pengerjaan Tugas 9, saya menggunakan ChatGPT sebagai alat bantu pembelajaran dan pengembangan aplikasi.
+
+Saya memanfaatkan ChatGPT untuk membantu:
+
+- Menganalisis persyaratan dan rubrik penilaian Tugas 9.
+- Memahami konsep JSON serialization, HTTP networking, token authentication, dan state management.
+- Memberikan referensi implementasi integrasi Education dengan Django REST Framework.
+- Memahami penanganan HTTP 401 dan mekanisme route guarding.
+- Melakukan code review dan mengidentifikasi potensi kesalahan pada implementasi.
+- Menyusun dokumentasi dan jawaban pertanyaan reflektif.
+
+Strategi prompting yang digunakan adalah memberikan konteks source code, dokumen tugas, dan hasil pengujian, kemudian meminta penjelasan secara bertahap menggunakan pendekatan first principles dan reverse engineering terhadap implementasi Project pada Tutorial 10.
+
+Saya memahami bahwa hasil yang diberikan oleh AI tidak selalu sesuai dengan struktur proyek maupun kontrak API yang digunakan. Sebagai contoh, penamaan endpoint Education pada saran awal AI berbeda dengan endpoint yang digunakan pada implementasi akhir. Oleh karena itu, kesesuaian endpoint, nama atribut, tipe data, dan struktur kode perlu diperiksa kembali.
+
+Saya melakukan pemeriksaan kode melalui `dart format`, `flutter analyze`, dan `flutter test`. Pada pemeriksaan lokal terakhir, tidak ditemukan masalah pada analyzer dan seluruh enam automated test berhasil dijalankan.
